@@ -9,7 +9,7 @@ for(const f of ['index.html','app.css','app.js','mastery.js','data-tools.js','pw
 const html=read('index.html'),sw=read('service-worker.js'),manifest=JSON.parse(read('manifest.webmanifest')),app=read('app.js'),tools=read('data-tools.js'),pwa=read('pwa.js');
 assert.ok(html.includes('href="app.css"')&&html.includes('src="mastery.js"'));
 assert.ok(!/(^|["'])((css|js|assets))\//.test(html),'HTML contains nested runtime paths');
-assert.ok(sw.includes('math-genius-v3.2-flat-shell-1')&&sw.includes("'./mastery.js'"));
+assert.ok(sw.includes('math-genius-v3.2.1-flat-shell-1')&&sw.includes("'./mastery.js'"));
 assert.ok(!/(^|["'])((css|js|assets))\//.test(sw),'service worker contains nested runtime paths');
 assert.equal(manifest.display,'standalone');
 for(const icon of manifest.icons)assert.ok(fs.existsSync(root+icon.src),`missing manifest icon ${icon.src}`);
@@ -19,6 +19,21 @@ assert.ok(pwa.includes('beforeinstallprompt')&&pwa.includes('appinstalled')&&pwa
 assert.ok(app.includes('dailyLearning:{},errorLog:[]'),'additive daily/error fields missing from fresh data');
 assert.ok(app.includes('d.dailyLearning=d.dailyLearning&&typeof d.dailyLearning'), 'daily activity normalization missing');
 assert.ok(app.includes('function showTutor('),'step-by-step tutor missing');
+assert.ok(app.includes('function buildHints('),'question-aware hint engine missing');
+assert.ok(!app.includes("q.h=[x.les[0][0],e1"),'legacy generic hint construction must be removed');
+const hintSource=app.slice(app.indexOf('function buildHints('),app.indexOf('function show(){'));
+const hintContext={T:[],String,Number};vm.createContext(hintContext);vm.runInContext(hintSource+';globalThis.testBuildHints=buildHints;',hintContext);
+const packHints=hintContext.testBuildHints({q:'49 cards are put into packs of 7. How many packs are there?',tid:'t7'},{});
+assert.equal(packHints.length,3);
+assert.ok(packHints[0].includes('49')&&packHints[0].includes('7'));
+assert.ok(packHints[1].includes('7 × ___ = 49'));
+assert.ok(!packHints.some(h=>/49\s*÷\s*7\s*=\s*7|answer is 7|there are 7 packs/i.test(h)),'hints must not reveal the final answer');
+assert.ok(packHints[2].includes('Count in groups'),'third hint should scaffold, not solve');
+const divisionHints=hintContext.testBuildHints({q:'42 ÷ 7 = ?',tid:'t7'},{});
+assert.ok(divisionHints[0].includes('equal groups'));
+const sequenceHints=hintContext.testBuildHints({q:'What is the next number? 10, 17, 24, 31, ?',tid:'pattern'},{});
+assert.ok(sequenceHints[0].includes('change from one number to the next'));
+
 assert.ok(app.includes('x.les[0][1]!==x.les[0][0]'),'Smart Tutor should include available Vietnamese lesson guidance');
 assert.ok(app.includes('function recordErrorReflection('),'error reflection missing');
 assert.ok(app.includes('function parentPage('),'parent report missing');
