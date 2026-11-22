@@ -9,7 +9,7 @@ for(const f of ['index.html','app.css','app.js','mastery.js','data-tools.js','pw
 const html=read('index.html'),sw=read('service-worker.js'),manifest=JSON.parse(read('manifest.webmanifest')),app=read('app.js'),tools=read('data-tools.js'),pwa=read('pwa.js');
 assert.ok(html.includes('href="app.css"')&&html.includes('src="mastery.js"'));
 assert.ok(!/(^|["'])((css|js|assets))\//.test(html),'HTML contains nested runtime paths');
-assert.ok(sw.includes('math-genius-v3.2.2-flat-shell-1')&&sw.includes("'./mastery.js'"));
+assert.ok(sw.includes('math-genius-v4.0.0-flat-shell-1')&&sw.includes("'./mastery.js'"));
 assert.ok(!/(^|["'])((css|js|assets))\//.test(sw),'service worker contains nested runtime paths');
 assert.equal(manifest.display,'standalone');
 for(const icon of manifest.icons)assert.ok(fs.existsSync(root+icon.src),`missing manifest icon ${icon.src}`);
@@ -68,4 +68,75 @@ M.record(learner,{tid:'demo'},true,0,1);M.record(learner,{tid:'demo'},false,1,1)
 assert.equal(M.assess(learner,'demo').attempts,2);
 const dayKey=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
 assert.equal(learner.dailyLearning[dayKey].answered,2);assert.equal(learner.tp.legacy.c,2);assert.equal(learner.mistakes.length,1);assert.equal(learner.sessions.length,1);
-console.log('Math Genius V3.2.2 Hint Engine tests passed.');
+console.log('Math Genius V3.4 base + V3.5 checks…');
+
+assert.ok(app.includes('sessionHistory:[]'),'session history should be initialized additively');
+assert.ok(app.includes('Review your answers'),'session review UI missing');
+assert.ok(app.includes('Practise missed questions'),'missed-question retry action missing');
+assert.ok(app.includes('D.sessionHistory.length>20'),'session history must be bounded');
+assert.ok(app.includes('function historyPage('),'learning journal page missing');
+assert.ok(app.includes('id=\"navHistory\"'),'learning journal navigation missing');
+assert.ok(app.includes('retryHistoryMissed'),'past missed-question retry missing');
+assert.ok(app.includes('Last 7 days · 7 ngày gần đây'),'learning journal weekly summary missing');
+
+assert.ok(typeof M.getLearningPath==='function','getLearningPath missing');
+assert.ok(typeof M.parentOverview==='function','parentOverview missing');
+assert.ok(typeof M.adaptiveLevel==='function','adaptiveLevel missing');
+assert.ok(typeof M.needsSupportList==='function','needsSupportList missing');
+const fakeT=[{id:'place',t:'Place'},{id:'add',t:'Add'},{id:'t6',t:'×6'},{id:'mdlong',t:'Long MD'}];
+const path=M.getLearningPath(learner,fakeT);
+assert.ok(Array.isArray(path)&&path.length>=1,'learning path should return items');
+const overview=M.parentOverview(learner,fakeT);
+assert.ok(Array.isArray(overview)&&overview.length>=1,'parent overview groups expected');
+assert.ok(app.includes('Your Learning Path'),'Learning Path UI missing on Home');
+assert.ok(app.includes('Parent Dashboard'),'Parent Dashboard title missing');
+assert.ok(app.includes('Progress by skill group'),'skill-group progress missing');
+assert.ok(app.includes('Skills that need support'),'needs-support section missing');
+assert.ok(sw.includes('math-genius-v4.0.0'),'service worker cache name not bumped');
+assert.ok(html.includes('4.0.0'),'HTML version not bumped');
+
+assert.ok(app.includes('adaptRemainingQuestions'),'mid-session adapt function missing');
+assert.ok(app.includes('generatePool'),'question pool generator missing');
+assert.ok(app.includes('followPath')||app.includes("start('path'"),'Follow full path action missing');
+assert.ok(app.includes('copyParentSummary'),'Parent copy summary missing');
+assert.ok(app.includes('Adaptive')&&(app.includes('Adaptive ·')||app.includes('adaptiveTarget')),'Adaptive badge text missing');
+assert.ok(typeof M.adaptiveLevel==='function');
+
+assert.ok(typeof M.adaptiveScaffold==='function','adaptiveScaffold missing');
+const scLow=M.adaptiveScaffold({skillEvidence:{}},'add',{correct:0,total:3,hints:6,recentCorrectStreak:0});
+assert.ok(scLow.intensity>=2,'struggle should raise scaffold intensity');
+assert.ok(scLow.autoFirstHint||scLow.forceGuided,'struggle should enable support flags');
+const scHigh=M.adaptiveScaffold({skillEvidence:{}},'add',{correct:5,total:5,hints:0,recentCorrectStreak:4});
+assert.ok(scHigh.intensity<=1,'strong performance should lower scaffold');
+assert.ok(app.includes('adaptSession'),'adaptSession missing');
+assert.ok(app.includes('scaffold'),'scaffold state missing in app');
+assert.ok(app.includes('Strong support')||app.includes('Guided support'),'scaffold labels missing');
+assert.ok(sw.includes('math-genius-v4.0.0'),'SW cache not on 3.7');
+assert.ok(html.includes('4.0.0'),'HTML version not 3.7');
+
+assert.ok(typeof M.topKnowledgeGap==='function','topKnowledgeGap missing');
+assert.ok(typeof M.prereqReady==='function','prereqReady missing');
+assert.ok(typeof M.getLearningPathDetailed==='function','getLearningPathDetailed missing');
+const learner2={skillEvidence:{add:{attempts:[],kc:{calculation:3,concept:1}}}};
+const gap=M.topKnowledgeGap(learner2,'add');
+assert.ok(gap&&gap.type==='calculation','KC gap should prefer highest count');
+assert.ok(app.includes('chip-strong')||app.includes('chip-guided'),'adaptive chip classes missing');
+assert.ok(app.includes('path-ready')||app.includes('path-locked'),'path unlock classes missing');
+assert.ok(app.includes('cele-card')||app.includes('cele-goal'),'celebration classes missing');
+assert.ok(sw.includes('math-genius-v4.0.0'),'SW not on 3.8');
+assert.ok(html.includes('4.0.0'),'HTML not on 3.8');
+
+assert.ok(app.includes('keypad'),'number keypad missing');
+assert.ok(app.includes('navMore')||app.includes('morePage'),'More nav missing');
+assert.ok(app.includes('scaffoldStory')||app.includes('adapt-story'),'adaptive story missing');
+assert.ok(app.includes('navrow-compact'),'compact nav class missing');
+assert.ok(sw.includes('math-genius-v4.0.0'),'SW not 3.9');
+assert.ok(html.includes('4.0.0'),'HTML not 3.9');
+
+assert.ok(app.includes('startDiagnostic'),'diagnostic starter missing');
+assert.ok(app.includes('finishDiagnostic'),'diagnostic finish missing');
+assert.ok(app.includes('hero-cta')||app.includes('heroStart'),'hero CTA missing');
+assert.ok(app.includes('Quick check'),'Quick check label missing');
+assert.ok(sw.includes('math-genius-v4.0.0'),'SW not 4.0');
+assert.ok(html.includes('4.0.0'),'HTML not 4.0');
+console.log('Math Genius V4.0.0 regression tests passed.');

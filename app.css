@@ -80,3 +80,62 @@ select{font:inherit;padding:9px 12px;border:1px solid var(--bd);border-radius:10
 #error-reflection{margin-top:12px}
 #error-reflection .mini{margin:3px}
 @media(max-width:520px){#error-reflection .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#error-reflection .mini{margin:0}}
+
+/* V3.5 Learning Path & Parent Dashboard */
+.path-panel h2{margin-bottom:4px}
+.path-item{border-left:3px solid var(--accent,#3b6cf6);padding-left:10px}
+.kpi small{display:block;opacity:.75;font-size:.75rem}
+
+/* V3.8 Adaptive chips, path unlock, celebration */
+.adapt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 10px}
+.chip{display:inline-flex;align-items:center;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:600;border:1px solid transparent}
+.chip-level{background:var(--soft);color:var(--pri);border-color:var(--bd)}
+.chip-indep{background:#e3f6ea;color:#1a8f4e}
+.chip-light{background:var(--soft);color:var(--pri)}
+.chip-guided{background:#fff4d6;color:#a15c00}
+.chip-strong{background:#fde8e8;color:#c93a3a}
+.chip-path{background:#eef0ff;color:#3b6cf6}
+:root[data-theme="dark"] .chip-indep, .dark .chip-indep{background:#16301f;color:#4cd08a}
+:root[data-theme="dark"] .chip-guided{background:#3a2e12;color:#ffc857}
+:root[data-theme="dark"] .chip-strong{background:#3a1c1c;color:#ff7d7d}
+.card.scaffold-3{box-shadow:0 0 0 2px rgba(201,58,58,.25)}
+.card.scaffold-2{box-shadow:0 0 0 2px rgba(161,92,0,.18)}
+.card.scaffold-0{box-shadow:0 0 0 2px rgba(26,143,78,.15)}
+.path-item.path-locked{opacity:.78}
+.path-item.path-locked .bar div{background:#99a2b5}
+.path-item.path-ready{border-left-color:#1a8f4e}
+.hero-goal{border:1px solid var(--pri);box-shadow:0 4px 16px #3b6cf622}
+.cele-card{border-color:#f0a500;box-shadow:0 6px 24px #f0a50033}
+.cele-emoji{font-size:1.8rem;text-align:center;margin:4px 0}
+.cele-goal{text-align:center;font-weight:600;color:var(--pri);margin:.4em 0}
+
+/* V3.9 Keypad, compact nav, adaptive story */
+.navrow-compact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.navrow-compact button{min-width:0;padding:10px 8px;font-size:.9rem}
+.num-wrap{margin-top:8px}
+.num-display{font-size:1.35rem;font-weight:600;text-align:center;min-width:0;flex:1;letter-spacing:1px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;max-width:320px}
+.key{font:inherit;font-size:1.25rem;font-weight:600;padding:14px 0;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);box-shadow:0 1px 0 #0001}
+.key:active{transform:scale(.97);background:var(--soft)}
+.adapt-story{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--soft);border-left:4px solid var(--pri);color:var(--tx);font-size:.92rem}
+@media(max-width:520px){
+  .keypad{max-width:none}
+  .key{padding:16px 0;font-size:1.3rem}
+  .navrow-compact{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* V4.0 Hero CTA, diagnostic, motion */
+.hero-cta{text-align:center;padding:20px 16px;border:2px solid var(--pri);background:linear-gradient(180deg,var(--soft),var(--card));box-shadow:0 8px 28px #3b6cf633}
+.hero-kicker{text-transform:uppercase;letter-spacing:.06em;font-size:.75rem;color:var(--pri);font-weight:700;margin:0 0 6px}
+.hero-title{font-size:1.45rem;margin:0 0 8px;line-height:1.25}
+.hero-btn{font-size:1.1rem;padding:14px 28px;border-radius:14px;margin-top:6px;animation:pulse-soft 2.4s ease-in-out infinite}
+@keyframes pulse-soft{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.cele-card{animation:pop-in .45s ease-out}
+@keyframes pop-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.chip{animation:fade-in .35s ease-out}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.adapt-story{animation:fade-in .4s ease-out}
+.practice-row{gap:8px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){
+  .hero-btn,.cele-card,.chip,.adapt-story{animation:none}
+}

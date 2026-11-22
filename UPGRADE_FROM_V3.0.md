@@ -1,9 +1,7 @@
-# Upgrade notes: V3.0 / V3.1 → V3.2
+# Upgrade notes → V3.6.0
 
-- Export a backup before replacing files.
-- Upload all flat package files into the GitHub repository root.
-- Do not clear localStorage or uninstall the existing app as part of the upgrade.
-- Existing learner keys, topic IDs, mistakes, stars, sessions and account payload are retained.
-- V3.2 adds `errorLog`; existing `skillEvidence`, `dailyLearning` and `dailyGoal` remain intact.
-- No Supabase schema migration is needed because new learner fields are stored in the existing JSON payload.
-- After deployment, reopen the HTTPS site and reload to activate the V3.2 service-worker cache.
+- Export backup before replacing files.
+- Existing skillEvidence, sessionHistory, mistakes, stars and cloud payload stay intact.
+- V3.6 adds live mid-session difficulty adaptation, Path mixed practice and Parent copy-summary.
+- No database migration required.
+- After deploy, hard-refresh so the new service-worker cache is used.

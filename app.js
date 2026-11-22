@@ -1,4 +1,4 @@
-// Math Genius V3 core: preserved curriculum, question generators, lessons, rewards, progress and Supabase flow.
+// Math Genius V4.0 Diagnostic + Hero CTA + motion — preserved curriculum, question generators, lessons, rewards, progress and Supabase flow.
 
 const $=s=>document.querySelector(s),R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,P=a=>a[R(0,a.length-1)],S=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
 const F=n=>n>=10000?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '):String(n);
@@ -278,9 +278,9 @@ else{const v=[0,1,2,3,4].map(()=>R(2,9)*4),p=R(5,9);q=num(`The graph shows the n
 return q};
 const mixAll=()=>{const x=P(T),q=G[x.id]();q.tid=x.id;return q};
 const STORE={schema:3,legacyKey:'m3a2',configKey:'mg3a_supabase_config',sessionKey:'mg3a_auth_session',activeKey:'mg3a_active_user'};
-const freshData=()=>({stars:0,hat:'',own:[],tp:{},err:{},best:0,snd:1,mode:'smart',level:'all',mistakes:[],reviewAt:{},reviewGap:{},sessions:[],lastStudy:'',speechRate:0.9,learningMode:'guided',skillEvidence:{},dailyGoal:10,dailyLearning:{},errorLog:[],schema:5});
+const freshData=()=>({stars:0,hat:'',own:[],tp:{},err:{},best:0,snd:1,mode:'smart',level:'all',mistakes:[],reviewAt:{},reviewGap:{},sessions:[],lastStudy:'',speechRate:0.9,learningMode:'guided',skillEvidence:{},dailyGoal:10,dailyLearning:{},errorLog:[],sessionHistory:[],schema:12});
 const readJSON=(k,fb=null)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}};
-const normalizeData=x=>{const d={...freshData(),...(x||{})};d.own=Array.isArray(d.own)?d.own:[];d.tp=d.tp||{};d.err=d.err||{};d.skillEvidence=d.skillEvidence&&typeof d.skillEvidence==='object'?d.skillEvidence:{};d.dailyGoal=Math.min(30,Math.max(5,Number(d.dailyGoal)||10));d.mistakes=Array.isArray(d.mistakes)?d.mistakes:[];d.errorLog=Array.isArray(d.errorLog)?d.errorLog:[];d.dailyLearning=d.dailyLearning&&typeof d.dailyLearning==='object'&&!Array.isArray(d.dailyLearning)?d.dailyLearning:{};d.reviewAt=d.reviewAt||{};d.reviewGap=d.reviewGap||{};d.sessions=Array.isArray(d.sessions)?d.sessions:[];d.mode=d.mode||'smart';d.level=d.level||'all';d.speechRate=Number.isFinite(+d.speechRate)?Math.min(1.2,Math.max(.7,+d.speechRate)):.9;d.learningMode=d.learningMode||'guided';d.schema=5;return d};
+const normalizeData=x=>{const d={...freshData(),...(x||{})};d.own=Array.isArray(d.own)?d.own:[];d.tp=d.tp||{};d.err=d.err||{};d.skillEvidence=d.skillEvidence&&typeof d.skillEvidence==='object'?d.skillEvidence:{};d.dailyGoal=Math.min(30,Math.max(5,Number(d.dailyGoal)||10));d.mistakes=Array.isArray(d.mistakes)?d.mistakes:[];d.errorLog=Array.isArray(d.errorLog)?d.errorLog:[];d.sessionHistory=Array.isArray(d.sessionHistory)?d.sessionHistory.slice(-20):[];d.dailyLearning=d.dailyLearning&&typeof d.dailyLearning==='object'&&!Array.isArray(d.dailyLearning)?d.dailyLearning:{};d.reviewAt=d.reviewAt||{};d.reviewGap=d.reviewGap||{};d.sessions=Array.isArray(d.sessions)?d.sessions:[];d.mode=d.mode||'smart';d.level=d.level||'all';d.speechRate=Number.isFinite(+d.speechRate)?Math.min(1.2,Math.max(.7,+d.speechRate)):.9;d.learningMode=d.learningMode||'guided';d.schema=6;return d};
 let AUTH={session:readJSON(STORE.sessionKey),config:readJSON(STORE.configKey,{url:'',key:''}),user:null,syncTimer:null,syncing:false,lastSync:'',error:''};
 const activeUser=()=>readJSON(STORE.activeKey,null);
 if(AUTH.session?.user?.id&&!activeUser())localStorage.setItem(STORE.activeKey,JSON.stringify({id:AUTH.session.user.id,email:AUTH.session.user.email}));
@@ -314,16 +314,39 @@ const totalCorrect=()=>Object.values(D.tp).reduce((a,p)=>a+(p.c||0),0);
 const dueTopics=()=>T.filter(x=>D.reviewAt[x.id]&&D.reviewAt[x.id]<=Date.now()).sort((a,b)=>(D.reviewAt[a.id]||0)-(D.reviewAt[b.id]||0));
 function difficultyOf(q){const txt=q.q||'',ex=q.ex||'';const nums=(txt.match(/\d+/g)||[]).map(Number);const story=/\b(A shop|A school|There were|has .* stickers|buys|pays|people|pupils|marbles|sweets|beads|saved|altogether)\b/i.test(txt);const multi=/two-step|step 1|step 2|then how many|altogether.*how many/i.test(txt+' '+ex);if(multi||story&&nums.length>=4)return 4;if(story||nums.length>=3&&txt.length>55)return 3;if(nums.some(n=>n>=1000)||txt.length>65)return 2;return 1}
 function smartLevel(id){let base;if(window.MGMastery)base=window.MGMastery.recommendedLevel(D,id);else{const p=D.tp[id]||{c:0,t:0,hints:0};const n=p.t||0,a=accuracy(p),hintRate=n?(p.hints||0)/(3*n):0,e=D.err[id]||0;base=n<5?1:a>=90&&hintRate<.2&&e<=1&&n>=8?4:a>=85&&hintRate<.35&&n>=5?3:a>=65?2:1}const recent=(D.errorLog||[]).filter(x=>x.tid===id&&Date.now()-(x.at||0)<14*86400000);const supportNeeds=recent.filter(x=>['calculation','read_question','operation_choice','concept'].includes(x.type)).length;return supportNeeds>=2?Math.max(1,base-1):base}
-function navButtons(){return `<div class="navrow"><button class="btn alt" id="navHome">🏠 Home</button><button class="btn alt" id="navReview">🔁 Review</button><button class="btn alt" id="navProgress">📊 Progress</button><button class="btn alt" id="navMastery">🧠 Skill Map</button><button class="btn alt" id="navParent">👨‍👩‍👧 Parent report</button><button class="btn alt" id="navMode">🎚️ Practice mode</button><button class="btn alt" id="navAccount">👤 Account</button></div>`}
-function bindNav(){const a=$('#navHome'),b=$('#navReview'),c=$('#navProgress'),m=$('#navMastery'),p=$('#navParent'),d=$('#navMode'),e=$('#navAccount');if(a)a.onclick=home;if(b)b.onclick=reviewPage;if(c)c.onclick=progressPage;if(m)m.onclick=masteryPage;if(p)p.onclick=parentPage;if(d)d.onclick=modePage;if(e)e.onclick=accountPage}
-function home(){stopT();set('🦉','Pick a topic and let’s go!');const w=weak(),due=dueTopics(),attempts=totalAttempts(),acc=attempts?Math.round(totalCorrect()/attempts*100):0;let h=navButtons();
-const daily=window.MGMastery?window.MGMastery.dailyProgress(D):{done:0,goal:D.dailyGoal||10};const rec=window.MGMastery?window.MGMastery.recommend(D,T):null;h+=`<div class="panel"><div class="topicmeta"><b>🎯 Daily learning goal</b><span>${daily.done}/${daily.goal} questions</span></div><div class="bar"><div style="width:${Math.min(100,daily.done/daily.goal*100)}%"></div></div>${rec?`<p class="sub">Next best step: <b>${rec.title}</b> · ${rec.reason}</p><button class="btn" id="dailyRec">Start recommended practice ▶</button>`:""}</div>`;h+=`<div class="panel"><div class="kpis"><div class="kpi"><b>⭐ ${D.stars}</b><small>Stars</small></div><div class="kpi"><b>${acc}%</b><small>Accuracy</small></div><div class="kpi"><b>${attempts}</b><small>Answers</small></div></div><div class="topicmeta"><span>${D.mode==='smart'?'🧠 Smart Mode':'🎚️ Manual Mode'}</span><span>${due.length} topic(s) due for review</span></div></div>`;
+function navButtons(){return `<div class="navrow navrow-compact"><button class="btn alt" id="navHome">🏠 Home</button><button class="btn alt" id="navHistory">📚 Journal</button><button class="btn alt" id="navReview">🔁 Review</button><button class="btn alt" id="navMastery">🧠 Skills</button><button class="btn alt" id="navParent">👨‍👩‍👧 Parent</button><button class="btn alt" id="navMore">⋯ More</button></div>`}
+function morePage(){stopT();set('⚙️','Settings & more');let h=navButtons()+`<h1>⋯ More</h1><div class="panel"><button class="btn" id="moreProgress" style="width:100%;margin:6px 0">📊 Progress overview</button><button class="btn alt" id="moreMode" style="width:100%;margin:6px 0">🎚️ Practice mode</button><button class="btn alt" id="moreAccount" style="width:100%;margin:6px 0">👤 Account & sync</button></div><p class="sub">Tip: daily practice on the Learning Path works better than long random sessions.</p>`;app.innerHTML=h;bindNav();$('#moreProgress').onclick=progressPage;$('#moreMode').onclick=modePage;$('#moreAccount').onclick=accountPage}
+function bindNav(){const a=$('#navHome'),h=$('#navHistory'),b=$('#navReview'),m=$('#navMastery'),p=$('#navParent'),o=$('#navMore');if(a)a.onclick=home;if(h)h.onclick=historyPage;if(b)b.onclick=reviewPage;if(m)m.onclick=masteryPage;if(p)p.onclick=parentPage;if(o)o.onclick=morePage}
+function home(){stopT();set('🦉','Your next step is ready');const w=weak(),due=dueTopics(),attempts=totalAttempts(),acc=attempts?Math.round(totalCorrect()/attempts*100):0;let h=navButtons();
+const daily=window.MGMastery?window.MGMastery.dailyProgress(D):{done:0,goal:D.dailyGoal||10};const rec=window.MGMastery?window.MGMastery.recommend(D,T):null;
+const pathFn=window.MGMastery&&(window.MGMastery.getLearningPathDetailed||window.MGMastery.getLearningPath);
+const path=pathFn?pathFn.call(window.MGMastery,D,T):[];
+const primary=path[0]||(rec?{t:{id:rec.id,t:rec.title},reason:rec.reason,v:{}}:null);
+h+=`<div class="panel hero-cta">`;
+if(primary&&primary.t){
+  h+=`<p class="hero-kicker">Next best step</p><h1 class="hero-title">${escapeHTML(primary.t.t||primary.t.title||'Practice')}</h1><p class="sub">${escapeHTML(primary.reason||rec&&rec.reason||'Recommended for you')}</p><button class="btn hero-btn" id="heroStart">▶ Start now</button>`;
+}else{
+  h+=`<p class="hero-kicker">Ready to learn</p><h1 class="hero-title">Pick a topic below</h1><p class="sub">Or open Skills to see what needs practice.</p>`;
+}
+h+=`<div class="topicmeta" style="margin-top:12px"><b>🎯 Daily goal</b><span>${daily.done}/${daily.goal}</span></div><div class="bar"><div style="width:${Math.min(100,daily.done/daily.goal*100)}%"></div></div></div>`;
+if(path.length){h+=`<div class="panel path-panel"><h2>🗺️ Your Learning Path</h2><p class="sub">Review due → weak skills → curriculum order. Lock opens when prerequisites are ready.</p>`;
+path.slice(0,5).forEach((item,i)=>{
+  const t=item.t,v=item.v||{},unlock=item.unlock||{ready:true},gap=item.gap;
+  const lockCls=unlock.ready?'path-ready':'path-locked';
+  const lockIcon=unlock.ready?'🟢':'🔒';
+  const gapNote=gap?` · ${gap.label}`:'';
+  h+=`<div class="reviewitem path-item ${lockCls}"><div style="flex:1;min-width:0"><b>${lockIcon} ${i+1}. ${escapeHTML(t.t)}</b><div class="topicmeta"><span>${v.label||'—'} · ${v.pct!=null?v.pct+'%':''}${gapNote}</span><span>${escapeHTML(item.reason||'')}</span></div><div class="bar"><div style="width:${v.pct||0}%"></div></div></div><button class="mini" data-path-id="${t.id}">Practise</button></div>`;
+});
+h+=`<div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn" id="startPath">Start next topic ▶</button><button class="btn alt" id="followPath">Follow full path (mixed) ▶</button></div></div>`}
+h+=`<div class="panel"><div class="kpis"><div class="kpi"><b>⭐ ${D.stars}</b><small>Stars</small></div><div class="kpi"><b>${acc}%</b><small>Accuracy</small></div><div class="kpi"><b>${attempts}</b><small>Answers</small></div></div><div class="topicmeta"><span>${D.mode==='smart'?'🧠 Smart Mode · Adaptive':'🎚️ Manual Mode'}</span><span>${due.length} topic(s) due for review</span></div></div>`;
 if(due.length)h+=`<div class="card"><b>📅 Review due today</b><p class="sub">${due.slice(0,3).map(x=>x.t).join(' · ')}</p><button class="btn" id="dueBtn">Start review ▶</button></div>`;
 if(w)h+=`<div class="card warn"><b>💡 Focus drill: ${topicName(w)}</b><br><small>Practise a topic that needs more attention.</small><p><button class="btn" id="fd">Practise now ▶</button></p></div>`;
 h+=`<div class="row" style="margin:10px 0"><button class="btn" id="sp">⚡ Speed 60s (6–9)</button><button class="btn alt" id="mx">🎯 Mixed challenge</button></div><h1>📚 Learning Units</h1>`;
 UN.forEach((u,i)=>{h+=`<h2>${u[0]}: ${u[1]} <span class="sub">· ${u[2]}</span></h2><div class="grid">`;T.filter(x=>x.u==i).forEach(x=>{const p=D.tp[x.id]||{s:0,c:0,t:0};h+=`<button class="card topic" data-t="${x.id}"><span class="stars">${stars(p.s||0)}</span><b>${x.t}</b><small>${x.vi}</small><div class="topicmeta"><span>${p.t?accuracy(p)+'% accuracy':'Not started'}</span><span>${D.err[x.id]?`⚠ ${D.err[x.id]} errors`:''}</span></div></button>`});h+='</div>'});
 h+=`<p style="text-align:center"><button class="mini" id="rs">Reset progress</button></p>`;app.innerHTML=h;bindNav();app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>lesson(b.dataset.t));$('#sp').onclick=speed;$('#mx').onclick=()=>start('mix');if($('#dailyRec')&&rec)$('#dailyRec').onclick=()=>start(rec.id);if(w)$('#fd').onclick=()=>start(w);if($('#dueBtn'))$('#dueBtn').onclick=()=>startDue();
-$('#rs').onclick=()=>{if(confirm('Reset all progress, review history and stars? This cannot be undone.')){const snd=D.snd;D={stars:0,hat:'',own:[],tp:{},err:{},best:0,snd,mode:'smart',level:'all',mistakes:[],reviewAt:{},reviewGap:{},sessions:[],lastStudy:'',speechRate:D.speechRate||.9,learningMode:'guided',dailyGoal:10,dailyLearning:{},skillEvidence:{},errorLog:[],schema:5};save();home()}}}
+app.querySelectorAll('[data-path-id]').forEach(b=>b.onclick=()=>start(b.dataset.pathId));
+if($('#startPath')&&path[0])$('#startPath').onclick=()=>start(path[0].t.id);if($('#followPath'))$('#followPath').onclick=()=>start('path',null,path.map(p=>p.t.id));if($('#heroStart')&&primary&&primary.t)$('#heroStart').onclick=()=>start(primary.t.id||primary.t);
+$('#rs').onclick=()=>{if(confirm('Reset all progress, review history and stars? This cannot be undone.')){const snd=D.snd;D={stars:0,hat:'',own:[],tp:{},err:{},best:0,snd,mode:'smart',level:'all',mistakes:[],reviewAt:{},reviewGap:{},sessions:[],lastStudy:'',speechRate:D.speechRate||.9,learningMode:'guided',dailyGoal:10,dailyLearning:{},skillEvidence:{},errorLog:[],sessionHistory:[],schema:12};save();home()}}}
 function modePage(){stopT();app.innerHTML=navButtons()+`<h1>🎚️ Practice settings</h1><div class="panel"><h2>Practice mode</h2><p><label><input type="radio" name="mode" value="smart" ${D.mode==='smart'?'checked':''} style="width:auto"> 🧠 Smart Mode – app adapts to your learning evidence.</label></p><p><label><input type="radio" name="mode" value="manual" ${D.mode==='manual'?'checked':''} style="width:auto"> 🎚️ Manual Mode – choose your preferred level.</label></p><h2>Preferred difficulty</h2><select id="level"><option value="all">Mixed levels</option><option value="1">Level 1 · Foundation</option><option value="2">Level 2 · Practice</option><option value="3">Level 3 · Application</option><option value="4">Level 4 · Challenge</option></select><p class="sub">Smart Mode recommends a level using accuracy, number of attempts and hint use. Manual Mode respects your selected level when enough questions are available.</p><h2>Read-aloud speed</h2><select id="speechRate"><option value="0.7">Slow</option><option value="0.9">Normal</option><option value="1.1">Fast</option></select><p class="sub">Speech speed applies to English read-aloud support.</p><button class="btn" id="saveMode">Save settings</button></div>`;bindNav();$('#level').value=D.level||'all';$('#speechRate').value=String(D.speechRate||.9);$('#saveMode').onclick=()=>{D.mode=document.querySelector('input[name="mode"]:checked').value;D.level=$('#level').value;D.speechRate=+$('#speechRate').value;save();home()}}
 function progressPage(){stopT();const attempts=totalAttempts(),correct=totalCorrect(),acc=attempts?Math.round(correct/attempts*100):0;let h=navButtons()+`<h1>📊 My Progress</h1><div class="panel"><div class="kpis"><div class="kpi"><b>${T.filter(x=>(D.tp[x.id]||{}).t>0).length}/${T.length}</b><small>Topics tried</small></div><div class="kpi"><b>${acc}%</b><small>Accuracy</small></div><div class="kpi"><b>${D.sessions.length}</b><small>Sessions</small></div></div></div>`;
 UN.forEach((u,i)=>{h+=`<h2>${u[0]}: ${u[1]}</h2><div class="panel">`;T.filter(x=>x.u==i).forEach(x=>{const p=D.tp[x.id]||{s:0,c:0,t:0};const a=accuracy(p);h+=`<div class="reviewitem"><div><b>${x.t}</b><div class="topicmeta"><span>${p.t?`${p.c}/${p.t} correct · ${a}%`:'Not started'}</span><span>${p.s?stars(p.s):'☆☆☆'}</span></div></div><button class="mini" data-go="${x.id}">Practise</button></div>`});h+='</div>'});app.innerHTML=h;bindNav();app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>start(b.dataset.go))}
@@ -331,32 +354,216 @@ function masteryPage(){stopT();const m=window.MGMastery;const summary=m?m.summar
 
 function parentPage(){
  stopT();
- const now=Date.now(),week=now-7*86400000;
+ const now=Date.now(),week=now-7*86400000,month=now-30*86400000;
  const sessions=(D.sessions||[]).filter(x=>(x.at||0)>=week);
  const days=Object.entries(D.dailyLearning||{}).filter(([k])=>{const d=new Date(k+'T00:00:00');return d.getTime()>=week-86400000}).sort((a,b)=>a[0].localeCompare(b[0]));
  const attempts=days.reduce((n,[,v])=>n+(v.answered||0),0),correct=days.reduce((n,[,v])=>n+(v.correct||0),0),acc=attempts?Math.round(correct/attempts*100):0;
  const byType=(D.errorLog||[]).filter(x=>(x.at||0)>=week).reduce((a,x)=>{a[x.type]=(a[x.type]||0)+1;return a;},{});
  const labels={calculation:'Calculation slips',read_question:'Misread questions',operation_choice:'Operation choice',concept:'Concept support needed',unsure:'Unclassified'};
  const topErrors=Object.entries(byType).sort((a,b)=>b[1]-a[1]);
- const weakTopics=T.map(x=>({x,p:D.tp[x.id]||{c:0,t:0}})).filter(z=>z.p.t>0).sort((a,b)=>(a.p.c/a.p.t)-(b.p.c/b.p.t)).slice(0,5);
  const daily=window.MGMastery?window.MGMastery.dailyProgress(D):{done:0,goal:D.dailyGoal||10};
- let h=navButtons()+`<h1>👨‍👩‍👧 Parent report</h1><p class="sub">Báo cáo học tập trên thiết bị/tài khoản hiện tại. Đây là dữ liệu học tập tham khảo, không phải đánh giá chính thức.</p>
- <div class="panel"><h2>Learning snapshot · 7 days</h2><div class="kpis"><div class="kpi"><b>${sessions.length}</b><small>Sessions</small></div><div class="kpi"><b>${attempts}</b><small>Answers · 7 days</small></div><div class="kpi"><b>${acc}%</b><small>Accuracy · 7 days</small></div></div><div class="topicmeta"><span>Today’s goal</span><b>${daily.done}/${daily.goal}</b></div><div class="bar"><div style="width:${Math.min(100,daily.done/daily.goal*100)}%"></div></div></div>`;
- h+=`<div class="panel"><h2>Recent activity</h2>${days.length?days.slice(-7).map(([d,v])=>`<div class="reviewitem"><b>${escapeHTML(d)}</b><span>${v.answered||0} answers · ${v.correct||0} correct</span></div>`).join(''):'<p class="sub">Daily activity will appear after new practice sessions.</p>'}</div>`;
- h+=`<div class="panel"><h2>Skills to support</h2>${weakTopics.length?weakTopics.map(({x,p})=>`<div class="reviewitem"><div><b>${escapeHTML(x.t)}</b><div class="topicmeta">${p.c}/${p.t} correct · ${Math.round(p.c/p.t*100)}%</div></div><button class="mini" data-parent-topic="${x.id}">Practise</button></div>`).join(''):'<p class="sub">No topic evidence yet.</p>'}</div>`;
- h+=`<div class="panel"><h2>Error reflections · 7 days</h2>${topErrors.length?topErrors.map(([k,n])=>`<div class="reviewitem"><span>${labels[k]||k}</span><b>${n}</b></div>`).join(''):'<p class="sub">No error reflections recorded in the last 7 days. When a learner answers incorrectly, they can optionally tell the app what felt difficult.</p>'}</div>`;
- h+=`<div class="panel"><h2>How to use this report</h2><ul><li>Look for a repeated difficulty, not one isolated mistake.</li><li>Ask the learner to explain their method before giving the answer.</li><li>Use the Practice button to revisit a topic together.</li><li>Data is stored in the current learner profile; guest data remains on this device unless backed up.</li></ul><p class="sub">Privacy: this page does not send a separate report to a parent. It displays the progress already stored in this Math Genius profile.</p></div>`;
+ const summary=window.MGMastery?window.MGMastery.summary(D,T):{secure:0,developing:0,emerging:T.length,due:0,needsSupport:0};
+ const overview=window.MGMastery&&window.MGMastery.parentOverview?window.MGMastery.parentOverview(D,T):[];
+ const support=window.MGMastery&&window.MGMastery.needsSupportList?window.MGMastery.needsSupportList(D,T,6):[];
+ let h=navButtons()+`<h1>👨‍👩‍👧 Parent Dashboard</h1><p class="sub">Báo cáo tiến bộ trực quan · Visual progress report. Dữ liệu tham khảo trên thiết bị/tài khoản hiện tại.</p>
+ <div class="panel"><h2>Learning snapshot · 7 days</h2><div class="kpis"><div class="kpi"><b>${sessions.length}</b><small>Sessions</small></div><div class="kpi"><b>${attempts}</b><small>Answers</small></div><div class="kpi"><b>${acc}%</b><small>Accuracy</small></div></div><div class="topicmeta"><span>Today’s goal</span><b>${daily.done}/${daily.goal}</b></div><div class="bar"><div style="width:${Math.min(100,daily.done/daily.goal*100)}%"></div></div></div>`;
+ h+=`<div class="panel"><h2>Mastery overview</h2><div class="kpis"><div class="kpi"><b>${summary.secure||0}</b><small>✅ Secure</small></div><div class="kpi"><b>${summary.developing||0}</b><small>🌱 Developing</small></div><div class="kpi"><b>${summary.needsSupport||summary.emerging||0}</b><small>🆘 Needs support</small></div><div class="kpi"><b>${summary.due||0}</b><small>📅 Review due</small></div></div></div>`;
+ if(overview.length){h+=`<div class="panel"><h2>Progress by skill group</h2>`;
+ overview.forEach(g=>{const pct=g.total?Math.round(g.secure/g.total*100):0;h+=`<div class="reviewitem" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${escapeHTML(g.title)}</b><span class="sub">${g.vi||''} · ${g.secure}/${g.total} secure</span></div><div class="bar" style="margin:6px 0"><div style="width:${pct}%"></div></div><div class="topicmeta"><span>✅ ${g.secure} secure</span><span>🌱 ${g.developing} developing</span><span>🆘 ${g.needs} need support</span><span>Avg ${g.avgPct}%</span></div></div>`});
+ h+=`</div>`}
+ h+=`<div class="panel"><h2>Skills that need support</h2>${support.length?support.map(({t,v})=>`<div class="reviewitem"><div style="flex:1;min-width:0"><b>${escapeHTML(t.t)}</b><div class="topicmeta"><span>${v.label} · ${v.pct}% · ${v.attempts} attempts</span><span>${v.due?'📅 Due':v.confidence||''}</span></div><div class="bar"><div style="width:${v.pct||0}%"></div></div></div><button class="mini" data-parent-topic="${t.id}">Practise together</button></div>`).join(''):'<p class="sub">No clear support needs yet — keep practising!</p>'}</div>`;
+ h+=`<div class="panel"><h2>Recent activity · 7 days</h2>${days.length?days.slice(-7).map(([d,v])=>`<div class="reviewitem"><b>${escapeHTML(d)}</b><span>${v.answered||0} answers · ${v.correct||0} correct</span></div>`).join(''):'<p class="sub">Daily activity will appear after new practice sessions.</p>'}</div>`;
+ h+=`<div class="panel"><h2>Error reflections · 7 days</h2>${topErrors.length?topErrors.map(([k,n])=>`<div class="reviewitem"><span>${labels[k]||k}</span><b>${n}</b></div>`).join(''):'<p class="sub">No error reflections recorded in the last 7 days.</p>'}</div>`;
+ h+=`<div class="panel"><h2>Share with family</h2><p class="sub">Copy a short text summary you can paste into a message or notebook.</p><button class="btn alt" id="copyParentSummary">📋 Copy summary</button><p class="sub" id="copyStatus" aria-live="polite"></p></div>`;
+ h+=`<div class="panel"><h2>How parents can help</h2><ul><li>Focus on skills marked “Needs support” or “Review due” — short daily practice works better than long sessions.</li><li>Ask the child to explain their method before revealing the answer.</li><li>Use “Practise together” buttons above to open a guided session side-by-side.</li><li>Celebrate Secure skills — they show consistent evidence, not one lucky day.</li></ul><p class="sub">Privacy: this dashboard shows only the progress stored in this Math Genius profile. No separate report is sent.</p></div>`;
  app.innerHTML=h;bindNav();app.querySelectorAll('[data-parent-topic]').forEach(b=>b.onclick=()=>start(b.dataset.parentTopic));
+ if($('#copyParentSummary'))$('#copyParentSummary').onclick=()=>{
+   const lines=[
+     `Math Genius – Parent summary (${new Date().toLocaleDateString()})`,
+     `7-day: ${sessions.length} sessions · ${attempts} answers · ${acc}% accuracy`,
+     `Mastery: ${summary.secure||0} secure · ${summary.developing||0} developing · ${summary.needsSupport||summary.emerging||0} need support · ${summary.due||0} review due`,
+     '',
+     'Skills that need support:'
+   ];
+   (support||[]).forEach(({t,v})=>lines.push(`- ${t.t}: ${v.label} (${v.pct}%, ${v.attempts} attempts)`));
+   if(overview&&overview.length){
+     lines.push('','By skill group:');
+     overview.forEach(g=>lines.push(`- ${g.title}: ${g.secure}/${g.total} secure (avg ${g.avgPct}%)`));
+   }
+   lines.push('','Generated by Math Genius Parent Dashboard. Practice together on weak skills for best results.');
+   const text=lines.join('\n');
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+     navigator.clipboard.writeText(text).then(()=>{$('#copyStatus').textContent='✅ Summary copied';}).catch(()=>{$('#copyStatus').textContent='Could not copy – select and copy manually.';});
+   }else{
+     const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+     try{document.execCommand('copy');$('#copyStatus').textContent='✅ Summary copied';}catch(e){$('#copyStatus').textContent='Copy failed';}
+     ta.remove();
+   }
+ };
 }
 
+
 function reviewPage(){stopT();const due=dueTopics();let h=navButtons()+`<h1>🔁 Smart Review</h1><div class="panel"><h2>Review mistakes</h2><p class="sub">${D.mistakes.length} saved question(s) to revisit.</p><button class="btn" id="mistakeBtn" ${D.mistakes.length?'':'disabled'}>Practise mistakes ▶</button></div><div class="panel"><h2>Spaced review</h2><p class="sub">Review schedule: 1, 3, 7, 14 and 30 days. Correct answers without hints move topics to a longer interval; mistakes bring them back sooner.</p><p class="sub">${due.length} topic(s) are due for review.</p>${due.length?due.map(x=>`<div class="reviewitem"><b>${x.t}</b><small>Due now</small></div>`).join(''):'<p class="sub">Nothing is due right now. Keep learning and the app will schedule reviews.</p>'}<button class="btn" id="dueReview" ${due.length?'':'disabled'}>Review due topics ▶</button></div><div class="panel"><h2>Review a Unit</h2><div class="grid">${UN.map((u,i)=>`<button class="opt" data-unit="${i}">${u[0]} · ${u[1]}</button>`).join('')}</div></div>`;app.innerHTML=h;bindNav();$('#mistakeBtn').onclick=startMistakes;$('#dueReview').onclick=startDue;app.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>startUnit(+b.dataset.unit))}
+function historyPage(selectedIndex=null){
+ stopT();
+ const history=Array.isArray(D.sessionHistory)?D.sessionHistory:[];
+ const now=Date.now(),week=now-7*86400000,recent=history.filter(x=>(x.at||0)>=week);
+ const answers=recent.reduce((n,x)=>n+(x.answers||[]).length,0),correct=recent.reduce((n,x)=>n+(x.answers||[]).filter(a=>a.correct).length,0);
+ const accuracyPct=answers?Math.round(correct/answers*100):0;
+ const hintCount=recent.reduce((n,x)=>n+(x.answers||[]).reduce((m,a)=>m+(Number(a.hints)||0),0),0);
+ let h=navButtons()+`<h1>📚 Learning journal · Nhật ký học tập</h1><p class="sub">Review completed practice sessions, notice progress and retry earlier questions.</p><div class="panel"><h2>Last 7 days · 7 ngày gần đây</h2><div class="kpis"><div class="kpi"><b>${recent.length}</b><small>Sessions</small></div><div class="kpi"><b>${answers}</b><small>Questions</small></div><div class="kpi"><b>${accuracyPct}%</b><small>Accuracy</small></div></div><p class="sub">Hints used: ${hintCount} · Recent sessions are stored on this learner profile.</p></div>`;
+ if(selectedIndex!==null&&history[selectedIndex]){
+  const session=history[selectedIndex],list=Array.isArray(session.answers)?session.answers:[],missed=list.filter(a=>!a.correct),topic=T.find(x=>x.id===session.id);
+  h+=`<div class="panel"><div class="row" style="justify-content:space-between"><div><h2>Session details</h2><p class="sub">${escapeHTML(topic?.t|| (session.id==='mix'?'Mixed practice':session.id==='review'?'Review practice':session.id||'Practice'))} · ${session.at?new Date(session.at).toLocaleString():''}</p></div><button class="mini" id="historyBack">← All sessions</button></div><div class="kpis"><div class="kpi"><b>${session.score??list.filter(a=>a.correct).length}/${session.total??list.length}</b><small>Score</small></div><div class="kpi"><b>${missed.length}</b><small>To practise</small></div><div class="kpi"><b>${list.length?Math.round(list.filter(a=>a.correct).length/list.length*100):0}%</b><small>Accuracy</small></div></div>${list.map((a,i)=>`<div class="reviewitem"><div style="flex:1;min-width:0"><b>${i+1}. ${escapeHTML(a.question?.q||'Question unavailable')}</b><div class="topicmeta"><span>${a.correct?'✅ Correct':'❌ Needs practice'} · ${Number(a.hints)||0} hint(s)</span><span>Answer: ${escapeHTML(String(a.question?.a??'—'))}</span></div><p class="sub">Your answer: ${escapeHTML(String(a.entered??'—'))}</p><p class="sub">${escapeHTML(a.question?.ex||'')}</p></div></div>`).join('')||'<p class="sub">This older session has no per-question details.</p>'}<div class="row"><button class="btn" id="repeatSession" ${list.length?'':'disabled'}>Repeat this session ▶</button><button class="btn alt" id="retryHistoryMissed" ${missed.length?'':'disabled'}>Retry missed questions ▶</button></div></div>`;
+ }else{
+  h+=`<div class="panel"><h2>Completed sessions · Lượt học đã hoàn thành</h2>${history.length?history.slice().reverse().map((x,revIndex)=>{const idx=history.length-1-revIndex,topic=T.find(t=>t.id===x.id),list=x.answers||[],right=list.filter(a=>a.correct).length,total=list.length||x.total||0,pct=total?Math.round(right/total*100):0;return `<div class="reviewitem"><div style="flex:1;min-width:0"><b>${escapeHTML(topic?.t||(x.id==='mix'?'Mixed practice':x.id==='review'?'Review practice':x.id||'Practice'))}</b><div class="topicmeta"><span>${x.at?new Date(x.at).toLocaleString():'Date unavailable'}</span><span>${x.score??right}/${x.total??total} · ${pct}%</span></div></div><button class="mini" data-history-view="${idx}">View</button></div>`}).join(''):'<p class="sub">No completed sessions yet. Finish a practice session and it will appear here.</p>'}</div>`;
+ }
+ app.innerHTML=h;bindNav();
+ if($('#historyBack'))$('#historyBack').onclick=()=>historyPage();
+ if($('#repeatSession'))$('#repeatSession').onclick=()=>{const x=history[selectedIndex];const qs=(x.answers||[]).map(a=>a.question).filter(validateQuestion);if(qs.length)start('review',qs)};
+ if($('#retryHistoryMissed'))$('#retryHistoryMissed').onclick=()=>{const x=history[selectedIndex];const qs=(x.answers||[]).filter(a=>!a.correct).map(a=>a.question).filter(validateQuestion);if(qs.length)start('review',qs)};
+ app.querySelectorAll('[data-history-view]').forEach(b=>b.onclick=()=>historyPage(Number(b.dataset.historyView)));
+}
 function startUnit(i){const ids=T.filter(x=>x.u===i).map(x=>x.id);start('mix',null,ids)}
 function startDue(){const ids=dueTopics().map(x=>x.id);if(ids.length)start('review',null,ids)}
 function startMistakes(){const qs=D.mistakes.slice(-10).reverse().map(x=>({...x.question,tid:x.tid}));if(qs.length)start('review',qs)}
-function lesson(id){stopT();const x=T.find(z=>z.id==id);if(!x){home();return}const vocab=x.kw.map((k,i)=>`<button class="vocabbtn" data-word="${escapeAttr(k[0])}">🔊 ${escapeHTML(k[0])} <span>· ${escapeHTML(k[1])}</span></button>`).join('');const parts=x.les.map((l,i)=>`<div class="learnstep"><b>Step ${i+1}. ${escapeHTML(l[0])}</b><p class="vi">${escapeHTML(l[1])}</p><button class="mini" data-say="${i}">🔊 Listen to this step</button></div>`).join('');app.innerHTML=`<button class="btn alt" id="bk">← Topics</button><h1>${escapeHTML(x.t)}</h1><p class="sub">${escapeHTML(x.vi)}</p><div class="card les"><h2 style="margin-top:0">1. Vocabulary · Từ vựng</h2><p class="sub">Tap a word to hear its English pronunciation.</p><div>${vocab}</div><h2>2. Learn · Bài học từng bước</h2>${parts}<h2>3. Worked example · Ví dụ mẫu</h2><div class="panel"><b>${escapeHTML(x.les[0][0])}</b><p class="vi">${escapeHTML(x.les[0][1])}</p><p class="sub">Read the rule, follow the example, then explain the method in your own words.</p></div><h2>4. Check your understanding</h2><p class="sub">Choose guided practice if you want hints, or independent practice to test what you can do alone.</p><div class="row"><button class="btn" id="guided">Guided practice ▶</button><button class="btn alt" id="independent">Independent practice ▶</button></div></div><p><button class="mini" id="rd">🔊 Listen to lesson</button></p>`;
-$('#bk').onclick=home;$('#rd').onclick=()=>say(x.les.map(l=>l[0]).join(' '));app.querySelectorAll('[data-word]').forEach(b=>b.onclick=()=>say(b.dataset.word));app.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(x.les[+b.dataset.say][0]));$('#guided').onclick=()=>start(id,null,null,true);$('#independent').onclick=()=>start(id,null,null,false);set('🦉','Learn the words, understand the example, then practise!');scrollTo(0,0)}
+function lesson(id){stopT();const x=T.find(z=>z.id==id);if(!x){home();return}const vocab=x.kw.map((k,i)=>`<button class="vocabbtn" data-word="${escapeAttr(k[0])}">🔊 ${escapeHTML(k[0])} <span>· ${escapeHTML(k[1])}</span></button>`).join('');const parts=x.les.map((l,i)=>`<div class="learnstep"><b>Step ${i+1}. ${escapeHTML(l[0])}</b><p class="vi">${escapeHTML(l[1])}</p><button class="mini" data-say="${i}">🔊 Listen to this step</button></div>`).join('');app.innerHTML=`<button class="btn alt" id="bk">← Topics</button><h1>${escapeHTML(x.t)}</h1><p class="sub">${escapeHTML(x.vi)}</p><div class="card les"><h2 style="margin-top:0">1. Vocabulary · Từ vựng</h2><p class="sub">Tap a word to hear its English pronunciation.</p><div>${vocab}</div><h2>2. Learn · Bài học từng bước</h2>${parts}<h2>3. Worked example · Ví dụ mẫu</h2><div class="panel"><b>${escapeHTML(x.les[0][0])}</b><p class="vi">${escapeHTML(x.les[0][1])}</p><p class="sub">Read the rule, follow the example, then explain the method in your own words.</p></div><h2>4. Check your understanding</h2><p class="sub">Choose guided practice if you want hints, or independent practice to test what you can do alone.</p><div class="row practice-row"><button class="btn" id="guided">Guided practice ▶</button><button class="btn alt" id="independent">Independent practice ▶</button></div><div class="row" style="margin-top:8px"><button class="btn alt" id="diagnostic">🎯 Quick check (5 Qs) ▶</button></div><p class="sub">New to this topic? Start with Quick check so the app can set the right support level.</p></div><p><button class="mini" id="rd">🔊 Listen to lesson</button></p>`;
+$('#bk').onclick=home;$('#rd').onclick=()=>say(x.les.map(l=>l[0]).join(' '));app.querySelectorAll('[data-word]').forEach(b=>b.onclick=()=>say(b.dataset.word));app.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(x.les[+b.dataset.say][0]));$('#guided').onclick=()=>start(id,null,null,true);$('#independent').onclick=()=>start(id,null,null,false);if($('#diagnostic'))$('#diagnostic').onclick=()=>startDiagnostic(id);set('🦉','Learn the words, understand the example, then practise!');scrollTo(0,0)}
 function validateQuestion(q){if(!q||typeof q.q!=='string'||!q.q.trim()||!Number.isFinite(Number(q.a))&&typeof q.a!=='string'||typeof q.ex!=='string'||!q.ex.trim())return false;if(Array.isArray(q.o)&&(!q.o.length||!q.o.map(String).includes(String(q.a))))return false;if(q.o&&new Set(q.o.map(String)).size!==q.o.length)return false;if(!q.o&&!Number.isFinite(Number(q.a)))return false;return true}
-function start(id,provided=null,topicIds=null,guided=false){let qs=[];if(provided){qs=provided.filter(validateQuestion).slice(0,10)}else{const ids=topicIds||(id==='mix'?T.map(x=>x.id):[id]);const target=D.mode==='manual'?(D.level==='all'?null:+D.level):null;const seen=new Set();let generated=[];for(let n=0;n<900&&qs.length<10;n++){const tid=P(ids),fn=G[tid];if(typeof fn!=='function')continue;const q=fn();q.tid=tid;if(!validateQuestion(q))continue;if(seen.has(q.q))continue;seen.add(q.q);const lv=difficultyOf(q),topicTarget=D.mode==='smart'&&id==='mix'?smartLevel(tid):target;generated.push(q);if(!topicTarget||lv===topicTarget){qs.push(q);continue}if(generated.length>=100&&qs.length<5&&Math.abs(lv-topicTarget)===1)qs.push(q)}if(qs.length<5){for(const q of generated){if(!qs.some(z=>z.q===q.q))qs.push(q);if(qs.length>=10)break}}if(qs.length<5){console.warn('Question generation yielded fewer than five valid questions for',ids,qs)}}if(!qs.length){home();return}Q={id,qs:qs.slice(0,10),i:0,sc:0,st:0,hl:0,topicStats:{},guided:!!guided};show()}
+
+function startDiagnostic(id){
+  const ids=[id];
+  const pool=generatePool(ids,1,20);
+  // Prefer easier items for diagnostic
+  const easy=pool.filter(q=>(q._lv||difficultyOf(q))<=2);
+  const qs=(easy.length>=5?easy:pool).slice(0,5);
+  if(!qs.length){start(id,null,null,true);return}
+  Q={id:'diagnostic',qs,pool,i:0,sc:0,st:0,hl:0,topicStats:{},guided:true,answers:[],sessionStats:{correct:0,total:0,hints:0,recentCorrectStreak:0},adaptiveTarget:1,scaffold:{intensity:2,autoFirstHint:true,maxHints:3,encourageTutor:true,forceGuided:true,reduceScaffold:false,label:'Quick check'},diagnosticTopic:id,scaffoldStory:'Quick check · Kiểm tra nhanh: 5 câu để chọn mức hỗ trợ phù hợp.'};
+  show();
+}
+function finishDiagnostic(){
+  const id=Q.diagnosticTopic||'place';
+  const total=Q.sessionStats.total||Q.qs.length, correct=Q.sessionStats.correct||Q.sc;
+  const acc=total?correct/total:0;
+  const hints=Q.sessionStats.hints||0;
+  let recommend='guided', level=1, msg='';
+  if(acc>=0.8&&hints<=2){recommend='independent';level=Math.min(4,2+(acc>=0.95?1:0));msg='Strong start — try Independent practice.';}
+  else if(acc>=0.6){recommend='guided';level=2;msg='Good base — Guided practice is a solid next step.';}
+  else{recommend='guided';level=1;msg='This topic needs support — start Guided with easier items.';}
+  // Store a soft preferred level on topic evidence
+  D.skillEvidence=D.skillEvidence||{};
+  const e=D.skillEvidence[id]||(D.skillEvidence[id]={attempts:[],streak:0,interval:-1,nextReviewAt:0,lastAt:0});
+  e.diag={acc:Math.round(acc*100),at:Date.now(),level,recommend};D.skillEvidence[id]=e;save();
+  const h=navButtons()+`<div class="card cele-card"><h1 style="text-align:center">Quick check done</h1><p style="text-align:center">${correct}/${total} correct · ${Math.round(acc*100)}%</p><p class="adapt-story">${escapeHTML(msg)}</p><div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="diagGo">${recommend==='independent'?'Independent practice ▶':'Guided practice ▶'}</button><button class="btn alt" id="diagHome">Home</button></div></div>`;
+  app.innerHTML=h;bindNav();
+  $('#diagGo').onclick=()=>start(id,null,null,recommend==='guided');
+  $('#diagHome').onclick=home;
+}
+function generatePool(ids,targetLevel,want=24){
+  const seen=new Set(),pool=[];
+  for(let n=0;n<1200&&pool.length<want;n++){
+    const tid=P(ids),fn=G[tid];
+    if(typeof fn!=='function')continue;
+    const q=fn();q.tid=tid;
+    if(!validateQuestion(q)||seen.has(q.q))continue;
+    seen.add(q.q);q._lv=difficultyOf(q);pool.push(q);
+  }
+  return pool;
+}
+function pickFromPool(pool,target,count,usedQs){
+  const used=new Set((usedQs||[]).map(q=>q.q));
+  const scored=pool.filter(q=>!used.has(q.q)).map(q=>{
+    const dist=Math.abs((q._lv||difficultyOf(q))-target);
+    return {q,dist,rand:Math.random()};
+  }).sort((a,b)=>a.dist-b.dist||a.rand-b.rand);
+  return scored.slice(0,count).map(x=>x.q);
+}
+function start(id,provided=null,topicIds=null,guided=false){
+  let qs=[],pool=[];
+  if(provided){qs=provided.filter(validateQuestion).slice(0,10)}
+  else{
+    const ids=topicIds||(id==='mix'||id==='path'?T.map(x=>x.id):[id]);
+    const target=D.mode==='manual'?(D.level==='all'?null:+D.level):null;
+    const smart=D.mode==='smart';
+    // For path mode use learning-path topic ids
+    let useIds=ids;
+    if(id==='path'&&window.MGMastery&&window.MGMastery.getLearningPath){
+      const path=window.MGMastery.getLearningPath(D,T);
+      useIds=path.map(p=>p.t.id).filter(Boolean);
+      if(!useIds.length)useIds=ids;
+    }
+    const primaryTarget=smart?smartLevel(useIds[0]||id):(target||2);
+    pool=generatePool(useIds,primaryTarget,28);
+    if(smart){
+      qs=pickFromPool(pool,primaryTarget,10,[]);
+      if(qs.length<8)qs=pool.slice(0,10);
+    }else{
+      const seen=new Set();
+      for(const q of pool){
+        if(qs.length>=10)break;
+        if(target&&Math.abs((q._lv||1)-target)>1&&qs.length>=5)continue;
+        if(seen.has(q.q))continue;seen.add(q.q);qs.push(q);
+      }
+      if(qs.length<5)qs=pool.slice(0,10);
+    }
+    if(qs.length<5){console.warn('Question generation yielded fewer than five valid questions for',useIds,qs.length)}
+  }
+  if(!qs.length){home();return}
+  Q={id,qs:qs.slice(0,10),pool:pool||[],i:0,sc:0,st:0,hl:0,topicStats:{},guided:!!guided,answers:[],sessionStats:{correct:0,total:0,hints:0,recentCorrectStreak:0},adaptiveTarget:null,scaffold:guided?{intensity:2,autoFirstHint:true,maxHints:3,encourageTutor:true,forceGuided:true,reduceScaffold:false,label:'Guided support'}:{intensity:1,autoFirstHint:false,maxHints:3,encourageTutor:false,forceGuided:false,reduceScaffold:false,label:'Light support'}};
+  show();
+}
+function adaptSession(){
+  if(D.mode!=='smart'||!Q||!Q.sessionStats||Q.sessionStats.total<2)return;
+  const tids={};
+  (Q.qs.slice(Math.max(0,Q.i-1))||[]).forEach(q=>{if(q&&q.tid)tids[q.tid]=(tids[q.tid]||0)+1});
+  const mainTid=Object.entries(tids).sort((a,b)=>b[1]-a[1])[0]?.[0]||Q.qs[Q.i]?.tid;
+  if(!window.MGMastery)return;
+
+  // 1) Scaffold intensity (guided / hints / tutor)
+  if(window.MGMastery.adaptiveScaffold){
+    const sc=window.MGMastery.adaptiveScaffold(D,mainTid,Q.sessionStats);
+    const prev=Q.scaffold&&Q.scaffold.intensity;
+    Q.scaffold=sc;
+    if(sc.forceGuided)Q.guided=true;
+    else if(sc.reduceScaffold&&Q.id!=='path')Q.guided=false;
+    // Human-readable adaptive story for the learner/parent
+    const stories={
+      0:'You are doing well — trying more independently.',
+      1:'Support level is steady. Keep going.',
+      2:'A bit more guidance for the next questions.',
+      3:'Extra support on: first hint shown and tutor ready if you need it.'
+    };
+    const vi={
+      0:'Con đang làm tốt — thử tự làm nhiều hơn.',
+      1:'Mức hỗ trợ ổn định. Cứ tiếp tục nhé.',
+      2:'Sẽ hỗ trợ thêm một chút cho các câu tiếp theo.',
+      3:'Hỗ trợ mạnh hơn: đã hiện gợi ý đầu và sẵn sàng giải thích từng bước.'
+    };
+    if(prev==null||prev!==sc.intensity){
+      Q.scaffoldStory=(stories[sc.intensity]||'')+' '+(vi[sc.intensity]||'');
+    }
+  }
+
+  // 2) Difficulty retarget for remaining items
+  if(Q.sessionStats.total<3)return;
+  const remaining=Q.qs.length-Q.i-1;
+  if(remaining<2||!(Q.pool&&Q.pool.length)||!window.MGMastery.adaptiveLevel)return;
+  const newTarget=window.MGMastery.adaptiveLevel(D,mainTid,Q.sessionStats);
+  Q.adaptiveTarget=newTarget;
+  const upcoming=Q.qs.slice(Q.i+1);
+  const need=upcoming.length;
+  const used=Q.qs.slice(0,Q.i+1).concat((Q.answers||[]).map(a=>a.question).filter(Boolean));
+  const fresh=pickFromPool(Q.pool,newTarget,need+4,used);
+  let fi=0,keep=[];
+  for(const q of upcoming){
+    const lv=q._lv||difficultyOf(q);
+    if(Math.abs(lv-newTarget)<=1||fi>=fresh.length)keep.push(q);
+    else keep.push(fresh[fi++]);
+  }
+  Q.qs=Q.qs.slice(0,Q.i+1).concat(keep.slice(0,need));
+}
+function adaptRemainingQuestions(){adaptSession()}
+
 function buildHints(q,x){
  const text=String(q.q||'').trim(),tid=q.tid||'',low=text.toLowerCase();
  const clean=n=>Number(String(n).replace(/,/g,''));
@@ -404,14 +611,33 @@ function buildHints(q,x){
  // Safe general fallback: deliberately non-specific and never copies q.ex or q.a.
  return [`Read the question again. What information is given, and what does the question ask you to find?`,`Choose a model that matches the situation: equal groups, a number line, place-value columns, or a bar model.`,`Write a number sentence with a blank for the unknown. Work it out one step at a time and check that it answers the question.`];
 }
-function show(){const q=Q.qs[Q.i],x=T.find(z=>z.id==q.tid)||T[0];Q.hl=Q.guided?1:0;q.h=buildHints(q,x);
-let h=`<div class="top"><button class="btn alt" id="bk">✕ Exit</button><b>${Q.i+1} / ${Q.qs.length} · ⭐ ${Q.st}</b></div><div class="bar"><div style="width:${Q.i/Q.qs.length*100}%"></div></div><div class="sub">${escapeHTML(x.t)} · <span class="leveltag">Level ${difficultyOf(q)}</span>${Q.guided?' · Guided':''}</div><div class="card"><div class="row" style="justify-content:space-between"><button class="mini" id="rd">🔊 Read aloud</button><button class="mini" id="ht">💡 Hint ${Q.guided?1:0}/3</button><button class="mini" id="tutor">🧑‍🏫 Explain step-by-step</button></div><div class="q">${escapeHTML(q.q)}</div>`;
+function show(){const q=Q.qs[Q.i],x=T.find(z=>z.id==q.tid)||T[0];
+const sc=Q.scaffold||{intensity:Q.guided?2:1,autoFirstHint:!!Q.guided,maxHints:3,encourageTutor:false,label:Q.guided?'Guided support':'Light support',forceGuided:!!Q.guided,reduceScaffold:false};
+const maxH=Math.min(3,sc.maxHints||3);
+Q.hl=(sc.autoFirstHint||Q.guided)?1:0;
+q.h=buildHints(q,x);
+const inten=sc.intensity!=null?sc.intensity:(Q.guided?2:1);
+const chipCls=['chip-indep','chip-light','chip-guided','chip-strong'][Math.max(0,Math.min(3,inten))]||'chip-light';
+const levelChip=Q.adaptiveTarget!=null?`<span class="chip chip-level">L${Q.adaptiveTarget}</span>`:`<span class="chip chip-level">L${difficultyOf(q)}</span>`;
+const scChip=`<span class="chip ${chipCls}">${escapeHTML(sc.label||'Support')}</span>`;
+const pathChip=Q.id==='path'?`<span class="chip chip-path">Path</span>`:'';
+let h=`<div class="top"><button class="btn alt" id="bk">✕ Exit</button><b>${Q.i+1} / ${Q.qs.length} · ⭐ ${Q.st}</b></div><div class="bar"><div style="width:${Q.i/Q.qs.length*100}%"></div></div><div class="sub adapt-bar">${escapeHTML(x.t)} ${levelChip} ${scChip} ${pathChip}</div><div class="card scaffold-${inten}"><div class="row" style="justify-content:space-between"><button class="mini" id="rd">🔊 Read aloud</button><button class="mini" id="ht">💡 Hint ${Q.hl}/${maxH}</button><button class="mini" id="tutor">${sc.encourageTutor?'🧑‍🏫 Need a walkthrough':'🧑‍🏫 Explain step-by-step'}</button></div><div class="q">${escapeHTML(q.q)}</div>`;
 if(q.bm){const mx=Math.max(...q.bm.map(b=>b[1]));h+=`<div class="bm">`+q.bm.map((b,i)=>`<div class="bl"><span>${b[0]}</span><div class="bb bb${i%3}" style="width:${Math.max(18,b[1]/mx*100)}%">${b[2]||b[1]}</div></div>`).join('')+`</div>`}
 if(q.fr)h+=`<div class="fr">`+Array.from({length:q.fr[1]},(_,i)=>`<i class="${i<q.fr[0]?'on':''}"></i>`).join('')+`</div>`;
 if(q.o)h+=`<div class="opts">${q.o.map(o=>`<button class="opt" data-v="${escapeAttr(o)}">${escapeHTML(o)}</button>`).join('')}</div>`;
-else h+=`<div class="row">${q.u=='$'?'<b>$</b>':''}<input id="in" inputmode="decimal" autocomplete="off" placeholder="?">${q.u&&q.u!='$'?`<b>${q.u}</b>`:''}<button class="btn" id="ck">Check</button></div>`;
-h+=`<div id="hb"></div><div id="fb"></div></div>`;app.innerHTML=h;$('#bk').onclick=home;$('#rd').onclick=()=>say(q.q);$('#tutor').onclick=()=>showTutor(q,x);
-$('#ht').onclick=()=>{if(Q.hl<3&&!Q.fin){Q.hl++;$('#hb').innerHTML=q.h.slice(0,Q.hl).map((t,i)=>`<div class="hb">💡 ${i+1}. ${escapeHTML(t)}</div>`).join('');$('#ht').textContent=`💡 Hint ${Q.hl}/3`}};if(Q.guided){$('#hb').innerHTML=q.h.slice(0,1).map((t,i)=>`<div class="hb">💡 ${i+1}. ${escapeHTML(t)}</div>`).join('');$('#ht').textContent='💡 Hint 1/3'}Q.fin=0;Q.errorRecorded=false;
+else h+=`<div class="num-wrap"><div class="row">${q.u=='$'?'<b>$</b>':''}<input id="in" inputmode="decimal" autocomplete="off" placeholder="?" class="num-display">${q.u&&q.u!='$'?`<b>${q.u}</b>`:''}<button class="btn" id="ck">Check</button></div><div class="keypad" id="keypad">${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(k=>`<button type="button" class="key" data-k="${k}">${k}</button>`).join('')}</div></div>`;
+h+=`<div id="hb"></div><div id="fb"></div></div>`;
+if(Q.scaffoldStory)h+=`<p class="adapt-story">${escapeHTML(Q.scaffoldStory)}</p>`;
+app.innerHTML=h;$('#bk').onclick=home;$('#rd').onclick=()=>say(q.q);$('#tutor').onclick=()=>showTutor(q,x);
+const kp=$('#keypad');if(kp){const inp=$('#in');kp.querySelectorAll('.key').forEach(b=>b.onclick=()=>{if(Q.fin)return;const k=b.dataset.k;if(k==='⌫')inp.value=inp.value.slice(0,-1);else if(k==='.'&&inp.value.includes('.'))return;else if(inp.value.length<12)inp.value+=k;});}
+const maxHBind=Math.min(3,(Q.scaffold&&Q.scaffold.maxHints)||3);
+$('#ht').onclick=()=>{if(Q.hl<maxHBind&&!Q.fin){Q.hl++;$('#hb').innerHTML=q.h.slice(0,Q.hl).map((t,i)=>`<div class="hb">💡 ${i+1}. ${escapeHTML(t)}</div>`).join('');$('#ht').textContent=`💡 Hint ${Q.hl}/${maxHBind}`}};
+if(Q.hl>0){$('#hb').innerHTML=q.h.slice(0,Q.hl).map((t,i)=>`<div class="hb">💡 ${i+1}. ${escapeHTML(t)}</div>`).join('');$('#ht').textContent=`💡 Hint ${Q.hl}/${maxHBind}`}
+if(Q.scaffold&&Q.scaffold.encourageTutor&&Q.sessionStats&&Q.sessionStats.total>=2&&Q.sessionStats.correct/Math.max(1,Q.sessionStats.total)<0.6){
+  const tip=document.createElement('p');tip.className='sub';tip.style.marginTop='6px';tip.textContent='Struggling? Try “Explain step-by-step” — the tutor walks through the method without giving only the answer.';
+  const card=app.querySelector('.card');if(card)card.appendChild(tip);
+}
+Q.fin=0;Q.errorRecorded=false;
 if(q.o)app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>ans(b.dataset.v,b));else{const i=$('#in');i.focus();$('#ck').onclick=()=>i.value.trim()&&ans(i.value);i.onkeydown=e=>{if(e.key=='Enter'&&i.value.trim())ans(i.value)}}}
 
 function showTutor(q,x){
@@ -427,6 +653,11 @@ function recordErrorReflection(q,type){
  D.errorLog=D.errorLog||[];
  D.errorLog.push({tid:q.tid,type,at:Date.now(),question:q.q});
  if(D.errorLog.length>150)D.errorLog=D.errorLog.slice(-150);
+ // Feed knowledge-component tally in mastery evidence
+ if(window.MGMastery&&q&&q.tid){
+   const e=(D.skillEvidence=D.skillEvidence||{})[q.tid]||(D.skillEvidence[q.tid]={attempts:[],streak:0,interval:-1,nextReviewAt:0,lastAt:0,kc:{}});
+   e.kc=e.kc||{}; e.kc[type]=(e.kc[type]||0)+1; D.skillEvidence[q.tid]=e;
+ }
  Q.errorRecorded=true;save();
  const labels={calculation:'Calculation slip',read_question:'Misread the question',operation_choice:'Operation choice',concept:'Need concept help',unsure:'Not sure'};
  const box=$('#error-reflection');
@@ -435,7 +666,7 @@ function recordErrorReflection(q,type){
 
 function ans(v,btn){if(Q.fin)return;Q.fin=1;const q=Q.qs[Q.i],tp=D.tp[q.tid]=D.tp[q.tid]||{s:0,c:0,t:0};let ok;
 if(q.o)ok=v===q.a;else{let s=String(v).replace(/[\s$]|cents?/gi,'');s=/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)?s.replace(/,/g,''):s.replace(',','.');ok=Math.abs(parseFloat(s)-q.a)<.005}
-tp.t++;tp.hints=(tp.hints||0)+Q.hl;if(window.MGMastery)window.MGMastery.record(D,q,ok,Q.hl,difficultyOf(q));Q.topicStats[q.tid]=Q.topicStats[q.tid]||{c:0,t:0};Q.topicStats[q.tid].t++;
+Q.answers=Q.answers||[];Q.answers.push({question:{q:q.q,a:q.a,o:q.o,ex:q.ex,u:q.u,bm:q.bm,fr:q.fr,tid:q.tid},correct:ok,entered:String(v),hints:Q.hl});if(Q.sessionStats){Q.sessionStats.total++;Q.sessionStats.hints+=Q.hl||0;if(ok){Q.sessionStats.correct++;Q.sessionStats.recentCorrectStreak=(Q.sessionStats.recentCorrectStreak||0)+1}else{Q.sessionStats.recentCorrectStreak=0}}tp.t++;tp.hints=(tp.hints||0)+Q.hl;if(window.MGMastery)window.MGMastery.record(D,q,ok,Q.hl,difficultyOf(q));Q.topicStats[q.tid]=Q.topicStats[q.tid]||{c:0,t:0};Q.topicStats[q.tid].t++;
 if(ok){tp.c++;Q.topicStats[q.tid].c++;Q.sc++;D.mistakes=D.mistakes.filter(m=>!(m.tid===q.tid&&m.question&&m.question.q===q.q));const g=Q.hl?1:2;D.stars+=g;Q.st+=g;D.err[q.tid]=Math.max(0,(D.err[q.tid]||0)-1);const gap=D.reviewGap[q.tid]||0;const schedule=[1,3,7,14,30];D.reviewGap[q.tid]=Q.hl?1:(schedule.find(day=>day>gap)||30);D.reviewAt[q.tid]=Date.now()+D.reviewGap[q.tid]*86400000;
 }else{D.err[q.tid]=(D.err[q.tid]||0)+1;D.reviewGap[q.tid]=0;D.reviewAt[q.tid]=Date.now();D.mistakes=D.mistakes.filter(m=>!(m.tid===q.tid&&m.question&&m.question.q===q.q));D.mistakes.push({tid:q.tid,question:{q:q.q,a:q.a,o:q.o,ex:q.ex,u:q.u,bm:q.bm,fr:q.fr},at:Date.now()});if(D.mistakes.length>100)D.mistakes.shift()}
 D.lastStudy=new Date().toISOString().slice(0,10);save();beep(ok);set(ok?'🥳':'🤔',ok?P(['Bingo! Genius!','Spot on!','Great thinking!']):'Not quite. Read the explanation, then try the next one!');
@@ -443,11 +674,19 @@ if(q.o)app.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.v==
 const last=Q.i===Q.qs.length-1,sh=q.o?q.a:(q.u=='$'?'$'+q.a:q.a+(q.u?' '+q.u:''));
 $('#fb').innerHTML=`<div class="fb ${ok?'ok':'bad'}"><b>${ok?'✅ Correct! Đúng rồi!':'❌ Not quite. Đáp án: '+sh}</b><br>${escapeHTML(q.ex)}</div>${!ok?`<div class="panel" id="error-reflection"><b>What made this question difficult?</b><p class="sub">Chọn một lý do để ứng dụng điều chỉnh phần ôn tập. Có thể bỏ qua.</p><div class="row"><button class="mini" data-error="calculation">Calculation slip</button><button class="mini" data-error="read_question">Misread question</button><button class="mini" data-error="operation_choice">Wrong operation</button><button class="mini" data-error="concept">Need concept help</button><button class="mini" data-error="unsure">Not sure</button></div></div>`:''}<p><button class="btn" id="nx">${last?'See results':'Next ▶'}</button></p>`;
 if(!ok){Q.errorRecorded=false;app.querySelectorAll('[data-error]').forEach(b=>b.onclick=()=>recordErrorReflection(q,b.dataset.error))}
-const nx=$('#nx');nx.onclick=()=>{if(last)done();else{Q.i++;show()}};nx.focus()}
-function done(){const s=Q.sc,st=s>=9?3:s>=7?2:s>=5?1:0;Object.entries(Q.topicStats||{}).forEach(([id,v])=>{if(v.t>=3){const p=D.tp[id]=D.tp[id]||{s:0,c:0,t:0};const pct=v.c/v.t;p.s=Math.max(p.s,pct>=.9?3:pct>=.7?2:pct>=.5?1:0)}});if(Q.id!=='mix'&&Q.id!=='review'){const p=D.tp[Q.id]=D.tp[Q.id]||{s:0,c:0,t:0};p.s=Math.max(p.s,st)}D.sessions.push({id:Q.id,score:s,total:Q.qs.length,at:Date.now()});if(D.sessions.length>200)D.sessions.shift();save();
+const nx=$('#nx');nx.onclick=()=>{if(last)done();else{adaptRemainingQuestions();Q.i++;show()}};nx.focus()}
+function done(){if(Q&&Q.id==='diagnostic'){finishDiagnostic();return}const s=Q.sc,st=s>=9?3:s>=7?2:s>=5?1:0;Object.entries(Q.topicStats||{}).forEach(([id,v])=>{if(v.t>=3){const p=D.tp[id]=D.tp[id]||{s:0,c:0,t:0};const pct=v.c/v.t;p.s=Math.max(p.s,pct>=.9?3:pct>=.7?2:pct>=.5?1:0)}});if(Q.id!=='mix'&&Q.id!=='review'){const p=D.tp[Q.id]=D.tp[Q.id]||{s:0,c:0,t:0};p.s=Math.max(p.s,st)}D.sessions.push({id:Q.id,score:s,total:Q.qs.length,at:Date.now()});if(D.sessions.length>200)D.sessions.shift();const session={id:Q.id,score:s,total:Q.qs.length,at:Date.now(),answers:(Q.answers||[]).slice()};D.sessionHistory=(D.sessionHistory||[]);D.sessionHistory.push(session);if(D.sessionHistory.length>20)D.sessionHistory=D.sessionHistory.slice(-20);save();
 set(st>1?'🥳':'🦉',st>1?'Amazing work!':'Practice makes perfect!');
-app.innerHTML=`<div class="card"><h1 style="text-align:center">Score: ${s} / ${Q.qs.length} · +${Q.st} ⭐</h1><div class="big" style="color:#f0a500">${stars(st)}</div><div class="big">${st>1?'🎉🎊🎉':''}</div><p style="text-align:center">${st==3?'Excellent! Xuất sắc!':st==2?'Great job! Làm tốt lắm!':st==1?'Good try! Cố gắng thêm nhé!':'Keep practising! Hãy xem lại bài học và thử lại.'}</p><p class="row" style="justify-content:center"><button class="btn" id="re">Try again</button>${Q.id!=='mix'&&Q.id!=='review'&&T.some(x=>x.id===Q.id)?'<button class="btn alt" id="ls">Review lesson</button>':''}<button class="btn alt" id="rv">Review mistakes</button><button class="btn alt" id="hm">Home</button></p></div>`;
-$('#re').onclick=()=>Q.id==='review'?startMistakes():start(Q.id);$('#hm').onclick=home;$('#rv').onclick=reviewPage;if($('#ls'))$('#ls').onclick=()=>lesson(Q.id)}
+const missed=(Q.answers||[]).filter(a=>!a.correct);
+const reviewHtml=(Q.answers||[]).map((a,i)=>`<div class="reviewitem session-answer"><div style="flex:1;min-width:0"><b>${i+1}. ${escapeHTML(a.question.q)}</b><div class="topicmeta"><span>${a.correct?'✅ Correct':'❌ Needs practice'} · ${a.hints} hint(s)</span><span>Answer: ${escapeHTML(String(a.question.a))}</span></div><p class="sub">${escapeHTML(a.question.ex||'')}</p></div></div>`).join('');
+const dailyNow=window.MGMastery?window.MGMastery.dailyProgress(D):{done:0,goal:10};
+const goalHit=dailyNow.done>=dailyNow.goal;
+const celebrate=st>=2||goalHit;
+const celeMsg=st==3?'Excellent! Xuất sắc!':st==2?'Great job! Làm tốt lắm!':st==1?'Good try! Cố gắng thêm nhé!':'Keep practising! Hãy xem lại bài học và thử lại.';
+const goalMsg=goalHit?`<p class="cele-goal">🎯 Daily goal reached · ${dailyNow.done}/${dailyNow.goal}</p>`:'';
+const adaptNote=Q.scaffold?`<p class="sub">Support this session: <b>${escapeHTML(Q.scaffold.label||'')}</b>${Q.adaptiveTarget!=null?' · difficulty L'+Q.adaptiveTarget:''}</p>`:'';
+app.innerHTML=`<div class="card ${celebrate?'cele-card':''}"><h1 style="text-align:center">Score: ${s} / ${Q.qs.length} · +${Q.st} ⭐</h1><div class="big" style="color:#f0a500">${stars(st)}</div><div class="big cele-emoji">${st>=3?'🎉🌟🎉':st>=2?'🎉🎊':goalHit?'🎯✨':''}</div><p style="text-align:center">${celeMsg}</p>${goalMsg}${adaptNote}<div class="panel"><h2>Session review · Review your answers</h2><p class="sub">${Q.answers.filter(a=>a.correct).length} correct · ${missed.length} to practise again</p><div>${reviewHtml}</div>${missed.length?'<button class="btn" id="retryMissed">Practise missed questions ▶</button>':''}</div><p class="row" style="justify-content:center"><button class="btn" id="re">Try again</button>${Q.id!=='mix'&&Q.id!=='review'&&T.some(x=>x.id===Q.id)?'<button class="btn alt" id="ls">Review lesson</button>':''}<button class="btn alt" id="rv">Review mistakes</button><button class="btn alt" id="hm">Home</button></p></div>`;
+$('#re').onclick=()=>Q.id==='review'?startMistakes():start(Q.id);$('#hm').onclick=home;$('#rv').onclick=reviewPage;if($('#ls'))$('#ls').onclick=()=>lesson(Q.id);if($('#retryMissed'))$('#retryMissed').onclick=()=>start('review',missed.map(a=>a.question))}
 function speed(){stopT();let sc=0,t=60,cur;set('⚡','Quick! Tables of 6, 7, 8 and 9!');
 const gen=()=>{const n=P([6,7,8,9]),m=R(1,10),mu=Math.random()<.65,a=mu?n*m:m,o=new Set([a]);while(o.size<4){const d=P([-n,n,-1,1,2,-2,10,-10]);if(a+d>0)o.add(a+d)}return{tx:mu?`${n} × ${m}`:`${n*m} ÷ ${n}`,a,o:S([...o])}};
 const draw=()=>{cur=gen();app.innerHTML=`<div class="top"><button class="btn alt" id="bk">✕ Exit</button><b>⏱ <span id="tm">${t}</span>s · ⭐ ${sc}</b></div><div class="card"><div class="q big">${cur.tx} = ?</div><div class="opts g2">${cur.o.map(x=>`<button class="opt" data-v="${x}">${x}</button>`).join('')}</div></div>`;
