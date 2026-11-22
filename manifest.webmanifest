@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Math Genius 3A + 3B – V3.1",
+  "name": "Math Genius 3A + 3B – V3.2",
   "short_name": "Math Genius",
-  "description": "Adaptive mathematics learning with skill evidence, daily goals and long-term review.",
+  "description": "Adaptive mathematics learning with step-by-step offline tutor, learner evidence and parent insights.",
   "lang": "vi",
   "start_url": "./",
   "scope": "./",

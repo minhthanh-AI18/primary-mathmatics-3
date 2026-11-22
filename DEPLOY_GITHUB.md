@@ -1,16 +1,12 @@
-# GitHub Pages deployment — flat package
+# GitHub Pages deployment — V3.2 Flat
 
-All files required at runtime are at the same directory level. Do not create `css/`, `js/`, or `assets/` folders.
+1. Back up learner progress from Settings → Export learning data.
+2. Unzip this package.
+3. Select every file inside the extracted folder.
+4. Upload directly to the repository root. Do not upload a containing folder and do not create `css/`, `js/` or `assets/`.
+5. Commit, wait for GitHub Pages, then open the HTTPS site and reload.
+6. Verify the V3.2 title, open Smart Tutor on a practice question, inspect Parent Report, and test installation. The install action is available in Settings and the fixed bottom toolbar; the browser controls its own address-bar install icon.
 
-## Upload
-1. Open this folder on your computer.
-2. Select all files, including `index.html`, `app.css`, JavaScript files, `manifest.webmanifest`, `service-worker.js`, and the three icon files.
-3. Upload them directly to the repository root (`/`).
-4. Commit the changes and wait for GitHub Pages to publish.
-5. Open the HTTPS Pages URL and reload once. The service worker will install the new flat cache.
+The new service worker cache is `math-genius-v3.2-flat-shell-1`. Existing localStorage keys and Supabase payload shape are retained. Do not clear site data during the upgrade.
 
-## Important
-- Keep the file names unchanged; paths in HTML, manifest, and service worker refer to these root-level names.
-- Do not delete browser site data; V3.1 uses the existing localStorage keys and retains legacy progress.
-- If an older service worker keeps showing the old app, close installed app tabs, open the site in the browser, reload, then reopen it.
-- GitHub Pages must serve the site over HTTPS for service worker and PWA installation.
+Note: static checks pass, but browser installation/offline and live Supabase must be verified on the deployed site.

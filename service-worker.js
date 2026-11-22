@@ -1,4 +1,4 @@
-const CACHE='math-genius-v3.1-flat-shell-1';
+const CACHE='math-genius-v3.2-flat-shell-1';
 const CORE=['./','./index.html','./app.css','./app.js','./mastery.js','./data-tools.js','./pwa.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('math-genius-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));

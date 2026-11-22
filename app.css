@@ -73,3 +73,10 @@ select{font:inherit;padding:9px 12px;border:1px solid var(--bd);border-radius:10
 #app .reviewitem{align-items:center}
 #app .field select{max-width:220px}
 @media(max-width:640px){.navrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.navrow button{min-width:0}}
+
+/* V3.2 Smart Tutor and parent insight */
+.tutorbox{background:var(--soft);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:10px}
+.tutorbox .learnstep{background:var(--card)}
+#error-reflection{margin-top:12px}
+#error-reflection .mini{margin:3px}
+@media(max-width:520px){#error-reflection .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#error-reflection .mini{margin:0}}
