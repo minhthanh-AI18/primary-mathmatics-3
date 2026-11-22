@@ -1,11 +1,11 @@
-# Math Genius 3A + 3B — V3.2.1 Hint Repair + Smart Tutor — Flat GitHub Upload
+# Math Genius 3A + 3B — V3.2.2 Hint Repair + Smart Tutor — Flat GitHub Upload
 
 ## Features retained
 - Original bilingual Math 3A + 3B lessons, vocabulary, question generators and practice.
 - Guided/independent practice, hints, read-aloud, Smart/Manual modes, rewards, mistakes, spaced review and Supabase sync.
 - V3.1 evidence-based mastery, daily goal and Skill Map.
 
-## V3.2.1 improvements
+## V3.2.2 improvements
 - Rebuilt the three-level Hint system so hints are generated from the current question type and its actual numbers, rather than reusing the first lesson heading and worked solution.
 - Multiplication/division word problems, equal groups, number sentences, sequences, money and multi-step questions receive targeted scaffolding.
 - Hint 3 remains a prompt or strategy and does not display the final answer; the full worked explanation remains separate in Smart Tutor/feedback.

@@ -16,3 +16,9 @@
 ## Validation
 - Static syntax checks, flat path checks, manifest/icon checks and feature-presence smoke tests are included.
 - Browser/device, offline installation and live Supabase behavior still require real deployment testing.
+
+## V3.2.2 — Complete Hint engine repair
+- Replaced brittle phrase-only hint matching with question-structure and topic-aware scaffolding.
+- Added dedicated guidance for missing factors, missing addends/subtrahends/minuends, multiplication/division equations, equal-group word problems, sequences, two-step problems, place value, money, quotient/remainder and multi-digit operations.
+- Hints no longer copy worked solutions from `q.ex`; third hints guide the learner's next reasoning step instead of stating the result.
+- Expanded automated regression tests for `49 cards ... packs of 7`, `9 × ? = 36`, addition, missing subtraction values and two-step word problems.
